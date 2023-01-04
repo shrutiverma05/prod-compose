@@ -13,6 +13,7 @@ services:
       - streamlit
       - node
     restart: always
+    Retry-After: 60
     # environment:
     #   DOMAINS: 'uat.ml.novacept.io -> http://api:8000 , uat.nlu.ml.novacept.io -> http://nlu:8080 , uat.kb.novacept.io -> http://streamlit:8501 , uat.kb.node.novacept.io -> http://node:8051'
     #   STAGE: 'production' # Don't use production until staging works
@@ -23,7 +24,7 @@ services:
     volumes: 
       - https-portal-data:/var/lib/https-portal
     networks:
-       - test-network
+      - test-network
  
    elasticsearch:
      restart: always
@@ -37,7 +38,7 @@ services:
     #   - discovery.type=single-node
     #   - "ES_JAVA_OPTS=-Xms300m -Xmx1024m"
      env_file:
-      - .env.elasticsearch
+       - .env.elasticsearch
      healthcheck:
         test: curl --fail http://localhost:9200/_cat/health || exit 1
         interval: 10s
@@ -55,7 +56,7 @@ services:
     #   # See rest_api/pipeline/pipelines.haystack-pipeline.yml for configurations of Search & Indexing Pipeline.
     #    - ELASTICSEARCH_HOST=elasticsearch
      env_file:
-      - .env.haystack
+       - .env.haystack
      depends_on:
       elasticsearch:
         condition: service_healthy
