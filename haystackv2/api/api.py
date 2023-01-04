@@ -5,7 +5,7 @@ from haystack.document_stores import ElasticsearchDocumentStore
 from haystack.nodes import EmbeddingRetriever
 from haystack.pipelines import FAQPipeline
 
-index_names = ['haytest','vootours','gts']
+index_names = ['gts']
 document_store = []
 retriever = []
 pipe = []

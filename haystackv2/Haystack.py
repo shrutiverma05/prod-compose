@@ -7,7 +7,7 @@ import csv
 import time
 
 data_file = 'faq_data.csv'
-index_names = ['haytest','vootours','gts']
+index_names = ['gts']
 document_store = []
 retriever = []
 pipe = []
