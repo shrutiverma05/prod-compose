@@ -101,7 +101,7 @@ if not _RELEASE:
     if st.session_state["authentication_status"]:
         
         data_file = 'botProperties.json'
-        url = f'https://novacorpweb.azurewebsites.net/{st.session_state["login_id"]}/{data_file}'
+        url = f'https://novaeu.azurewebsites.net/{st.session_state["login_id"]}/{data_file}'
         urllib.request.urlretrieve(url, data_file)
         with open(data_file, encoding='cp1252') as botp:
             botProperties = json.load(botp)
@@ -148,7 +148,7 @@ if not _RELEASE:
             indata = []
             index = set()
             data_file = 'faq_data.csv'
-            url = f'https://novacorpweb.azurewebsites.net/{st.session_state["login_id"]}/{data_file}'
+            url = f'https://novaeu.azurewebsites.net/{st.session_state["login_id"]}/{data_file}'
             urllib.request.urlretrieve(url, data_file)
             with open(data_file, mode ='r',encoding='cp1252') as file:
                 csvFile = csv.reader(file)
@@ -190,9 +190,9 @@ if not _RELEASE:
                     row.append(str(i+1))
                     save.append(row)
             
-            HOSTNAME = "waws-prod-bay-153.ftp.azurewebsites.windows.net"
-            USERNAME = "novaCorpWeb\$novaCorpWeb"
-            PASSWORD = "B4sdhvCuwvH9XTCohRJhuQPf01n4xf0phPz2N1L0XlKY6sNWb0DkxxlTbpnu"
+            HOSTNAME = "waws-prod-db3-177.ftp.azurewebsites.windows.net"
+            USERNAME = "novaeu\$novaeu"
+            PASSWORD = "r8d0hfMcM1ssZ0K4jspHbQ1zwdqjH29PvMnMzFugnpyrfZ1kZfG6Yc9kJbi7"
 
             # Connect FTP Server
             ftp_server = ftplib.FTP(HOSTNAME, USERNAME, PASSWORD)

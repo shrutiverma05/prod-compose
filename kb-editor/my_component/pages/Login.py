@@ -16,7 +16,7 @@ st.text_input('Password',key='password')
 if st.button('Submit'):
     try:
         data_file = 'botProperties.json'
-        url = f'https://novacorpweb.azurewebsites.net/{st.session_state["login_id"]}/{data_file}'
+        url = f'https://novaeu.azurewebsites.net/{st.session_state["login_id"]}/{data_file}'
         urllib.request.urlretrieve(url, data_file)
         with open(data_file, encoding='cp1252') as f:
             data = json.load(f)
