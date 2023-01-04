@@ -1,0 +1,135 @@
+:root {
+    --primary: #561f76;
+    --white: #ffffff;
+}
+@font-face {
+    font-family:"NovaBotFont";
+    src: url("https://novacorpweb.azurewebsites.net/assets/fonts/IBMPlexSans-Regular.ttf") format("ttf"); 
+} 
+  
+body {
+    font-family: "Helvetica", Sans-serif;
+}
+span.css-pkbazv.e1fqkh3o5{
+    color: var(--primary); 
+}
+span.css-10trblm.e16nr0p30{
+    font-family: "Helvetica", Sans-serif;
+    font-size: 30px;
+    color: var(--primary);
+}
+section.css-163ttbj.e1fqkh3o11{
+    background-color: var(--primary);
+}
+button.css-9s5bis.edgvbvh3{
+    background-color: var(--white);
+}
+svg.e1fb0mya1.css-fblp2m.ex0cdmw0{
+    color: black;
+}
+a.css-17nby6i.e1fqkh3o6{
+    background-color:var(--white);
+}
+a.css-1hverof.e1fqkh3o6{
+    background-color: #E9D6EB;
+}
+span.css-17lntkn.e1fqkh3o5{
+    color: var(--primary);
+}
+label.css-81oif8.effi0qh3{
+    color: black;
+}
+button.css-1x8cf1d.edgvbvh10{
+    fill: var(--white);
+    color: var(--white);
+    background-color: var(--primary);
+    border-style: solid;
+    border-width: 1px 1px 1px 1px;
+    border-color: var(--primary);
+}
+button.css-1x8cf1d:focus:not(:active) {
+    border-color: var(--white);
+    color: var(--white);
+}
+button.css-1x8cf1d:focus {
+    box-shadow: var(--primary) 0px 0px 0px 0.2rem;
+    outline: none;
+}
+footer{
+    display: none !important;
+}
+button.css-yyj0jg.edgvbvh3{
+    color: var(--white);
+}
+label.css-klqnuk.ehezqtx4{
+    color: var(--white);
+}
+div.css-184tjsw.e16nr0p34>p{
+    color: black;
+}
+button.step-down.css-lmqt2d.e1jwn65y1:hover{
+    background-color: var(--primary);
+}
+button.step-up.css-lmqt2d.e1jwn65y1:hover{
+    background-color: var(--primary);
+}
+button.css-9s5bis.edgvbvh3:focus{
+    box-shadow: var(--primary) 0px 0px 0px 0.2rem;
+}
+.css-184tjsw p{
+    font-size: 18px; 
+} 
+
+[data-testid|="stHeader"]{
+    background-color: var(--primary);
+    height: 3rem; 
+}
+
+[data-testid="stSidebarNav"] {
+    background-image: url("https://i.postimg.cc/mcgHp2Mw/Novacept-Final-logo-01.png");
+    background-repeat: no-repeat;
+    padding-top: 14px;
+    background-position: 17px -25px;
+}
+/* [data-testid="stSidebarNav"]::before {
+    content: "Novacept";
+    margin-left: 20px;
+    margin-top: 20px;
+    font-size: 20px;
+    position: relative;
+    top: 100px;
+} */
+[data-testid="stHeader"] {
+    background-image: url("https://i.postimg.cc/mcgHp2Mw/Novacept-Final-logo-01.png");
+    background-repeat: no-repeat;
+    background-position: 57px -65px;
+}
+
+button.step-down.css-1r8izn3.e1jwn65y1:hover{
+    background-color: var(--primary);
+}
+button.step-up.css-1r8izn3.e1jwn65y1:hover{
+    background-color: var(--primary);
+}
+
+label.css-81oif8.effi0qh3{
+    background: white;
+    padding: 5px;
+    border-radius: 5px;
+}
+
+
+@media (max-width: 612px) {
+    [data-testid|="stSidebar"]{
+        background-color: var(--primary);
+    }
+    div.block-container.css-18e3th9.egzxvld2{
+        padding: 4rem 1rem 10rem !important;
+    }
+    /* div.element-container.css-h7j2le.e1tzin5v3{
+        display: none !important;
+    } */
+    span.css-10trblm.e16nr0p30{
+        font-size: 94% !important;
+    }
+}

@@ -1,0 +1,12 @@
+version: "3.1"
+
+nlu:
+- intent: callback
+  examples: |
+    - call back
+    - callback
+    
+- intent: start_over
+  examples: |
+    - restart
+    - start over

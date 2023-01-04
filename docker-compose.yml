@@ -1,0 +1,116 @@
+version: '3'
+services:
+   https-portal:
+    image: steveltn/https-portal:1
+    ports:
+      - '443:443'
+      - '80:80'
+    links:
+      - elasticsearch
+      - haystack
+      - api
+      - nlu
+      - streamlit
+      - node
+    restart: always
+    # environment:
+    #   DOMAINS: 'uat.ml.novacept.io -> http://api:8000 , uat.nlu.ml.novacept.io -> http://nlu:8080 , uat.kb.novacept.io -> http://streamlit:8501 , uat.kb.node.novacept.io -> http://node:8051'
+    #   STAGE: 'production' # Don't use production until staging works
+    #   # FORCE_RENEW: 'true'
+    #   WEBSOCKET: 'true'
+    env_file:
+      - .env
+    volumes: 
+      - https-portal-data:/var/lib/https-portal
+    networks:
+       - test-network
+ 
+   elasticsearch:
+     restart: always
+     container_name: "elasticsearch-main"
+     image: "deepset/elasticsearch-countries-and-capitals"
+     ports:
+       - 9200:9200
+     networks:
+       - test-network
+    #  environment:
+    #   - discovery.type=single-node
+    #   - "ES_JAVA_OPTS=-Xms300m -Xmx1024m"
+     env_file:
+      - .env.elasticsearch
+     healthcheck:
+        test: curl --fail http://localhost:9200/_cat/health || exit 1
+        interval: 10s
+        timeout: 1s
+        retries: 10
+        start_period: 45s 
+
+   haystack:
+     restart: always
+     container_name: "haystack"
+     build: ./haystackv2
+     networks:
+       - test-network
+    #  environment:
+    #   # See rest_api/pipeline/pipelines.haystack-pipeline.yml for configurations of Search & Indexing Pipeline.
+    #    - ELASTICSEARCH_HOST=elasticsearch
+     env_file:
+      - .env.haystack
+     depends_on:
+      elasticsearch:
+        condition: service_healthy
+     
+   api:
+     restart: always
+     container_name: "haystack_api"
+     build: ./haystackv2/api
+     ports:
+       - 8000:8000
+     networks:
+       - test-network
+    #  environment:
+    #   # See rest_api/pipeline/pipelines.haystack-pipeline.yml for configurations of Search & Indexing Pipeline.
+    #    - ELASTICSEARCH_HOST=elasticsearch
+     env_file:
+      - .env.haystack
+     depends_on:
+      elasticsearch:
+         condition: service_healthy
+   nlu:
+    restart: always
+    build: ./rasa_nlu
+    container_name: rasa-nlu
+    volumes:
+     - ./rasa_nlu/config.yml:/app/config.yml
+     - ./rasa_nlu/models/:/app/models/
+    ports:
+     - "8080:8080"
+    networks:
+     - test-network
+
+   streamlit:
+    restart: always
+    container_name: streamlit-data
+    build: ./kb-editor/my_component
+    ports:
+     - "8501:8501"
+    networks:
+     - test-network
+
+   node:
+    restart: always
+    container_name: node-data
+    build: ./kb-editor/my_component/frontend
+    ports:
+     - "8051:8051"
+    networks:
+     - test-network
+    command: ["npm", "start"]
+    # volumes:
+    #   - /app/frontend
+    tty: true
+     
+networks:
+  test-network:
+volumes:
+  https-portal-data:
