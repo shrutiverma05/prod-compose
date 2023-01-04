@@ -1,6 +1,7 @@
 import os
 import streamlit.components.v1 as components
 
+
 # Create a _RELEASE constant. We'll set this to False while we're developing
 # the component, and True when we're ready to package and distribute it.
 # (This is, of course, optional - there are innumerable ways to manage your
@@ -82,6 +83,7 @@ def my_component(botProp,name, key=None):
 # app: `$ streamlit run my_component/__init__.py`
 if not _RELEASE:
     import streamlit as st
+    from math import ceil
     from streamlit_javascript import st_javascript
     import csv
     import time
