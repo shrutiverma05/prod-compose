@@ -27,7 +27,7 @@ if not _RELEASE:
         # Pass `url` here to tell Streamlit that the component will be served
         # by the local dev server that you run via `npm run start`.
         # (This is useful while your component is in development.)
-        url="https://uat.kb.node.novacept.io",
+        url="https://kb.node.novacept.io",
     )
 else:
     # When we're distributing a production version of the component, we'll
@@ -88,7 +88,9 @@ if not _RELEASE:
     import ftplib
     import urllib.request
     import json
-
+    
+    if "login_id" not in st.session_state:
+        st.session_state.login_id = ''
     st.set_page_config(layout="wide")
     with open("designing.css") as source_des:
         st.markdown(f"<style>{source_des.read()}</style>",unsafe_allow_html=True)
@@ -214,121 +216,137 @@ if not _RELEASE:
                 step=1,
                 key="num_questions",
             )
-            
+            page_columns = st.columns(2)
+            a_per_page = page_columns[1].slider('Answers per Page',1, 30,15, key='a_per_page')
+            last_page = ceil(num_questions/a_per_page)
+            page = page_columns[0].selectbox('Page',range(1,last_page+1))
+            # Compare current page selection to first and last page number
+            if page == 1:
+                first = True
+            else:
+                first = False
+            if page == last_page:
+                last = True
+            else:
+                last = False
+        answer_index = st.session_state.num_questions
+        if answer_index > 0:
+            first = (page-1)*a_per_page
+            next = min(first + a_per_page, answer_index)
+            for i in range(first,next):  
         
-        for i in range(num_questions):
-            if f"qa_num_{i}" not in st.session_state:
-                st.session_state[f"qa_num_{i}"] = 0
+                if f"qa_num_{i}" not in st.session_state:
+                    st.session_state[f"qa_num_{i}"] = 0
 
-            if f"ans_{i}" not in st.session_state:
-                st.session_state[f"ans_{i}"] = ""
-
-            con = st.container()
-            qa_num = con.number_input(
-                str(i + 1) + ". Add or remove Questions",
-                min_value=0,
-                step=1,
-                key=f"qa_num_{i}",
-            )
-            col1, col2 = con.columns([5, 5])
-            for j in range(qa_num):
-                if f"question_{i}_{j}" not in st.session_state:
-                    st.session_state[f"question_{i}_{j}"] = ""
-
-                col1.text_input(
-                    "Questions",
-                    label_visibility="visible" if j == 0 else "collapsed",
-                    key=f"question_{i}_{j}",
-                )
-
-            with col2:
                 if f"ans_{i}" not in st.session_state:
-                    st.session_state[f"ans_{i}"] = ''
-                if st.session_state[f"ans_{i}"] == '':
-                    if st.button(f"{i+1}.Create card"):
-                        st.session_state.refresh=1
-                        st.session_state[f"ans_{i}"] = '''{"type": "AdaptiveCard","$schema": "http://adaptivecards.io/schemas/adaptive-card.json","version": "1.6","body": []}'''
-                    else:
-                        pass
-                    if st.button(f"{i+1}.Create carousel"):
-                        st.session_state.refresh=1
-                        st.session_state[f"ans_{i}"] = '''{"type": "AdaptiveCard","$schema": "http://adaptivecards.io/schemas/adaptive-card.json","version": "1.6","body": []}/??/{"type": "AdaptiveCard","$schema": "http://adaptivecards.io/schemas/adaptive-card.json","version": "1.6","body": []}'''
-                    else:
-                        pass
-                else:
-                    pass
-                
-                if st.session_state[f"ans_{i}"].find('/??/') == -1:
-                    try:
-                        ans=json.loads(st.session_state[f"ans_{i}"])
-                        num_clicks = my_component(botProperties,ans, key='Foo '+str(i+1)+' Answer')
-                        k = "editcard"
-                        adata = json.dumps(ans)
-                        if st.button(f"{i+1}.Edit"):
-                            st_javascript(f"sessionStorage.setItem('{k}', JSON.stringify({adata}));")
-                            st.session_state["editcard"] = f"ans_{i}"
-                        else:
-                            pass
-                        if st.button(f"{i+1}.Delete card"):
+                    st.session_state[f"ans_{i}"] = ""
+
+                con = st.container()
+                qa_num = con.number_input(
+                    str(i + 1) + ". Add or remove Questions",
+                    min_value=0,
+                    step=1,
+                    key=f"qa_num_{i}",
+                )
+                col1, col2 = con.columns([5, 5])
+                for j in range(qa_num):
+                    if f"question_{i}_{j}" not in st.session_state:
+                        st.session_state[f"question_{i}_{j}"] = ""
+
+                    col1.text_input(
+                        "Questions",
+                        label_visibility="visible" if j == 0 else "collapsed",
+                        key=f"question_{i}_{j}",
+                    )
+
+                with col2:
+                    if f"ans_{i}" not in st.session_state:
+                        st.session_state[f"ans_{i}"] = ''
+                    if st.session_state[f"ans_{i}"] == '':
+                        if st.button(f"{i+1}.Create card"):
                             st.session_state.refresh=1
-                            st.session_state[f"ans_{i}"] = ''
+                            st.session_state[f"ans_{i}"] = '''{"type": "AdaptiveCard","$schema": "http://adaptivecards.io/schemas/adaptive-card.json","version": "1.6","body": []}'''
                         else:
                             pass
-                    except:
-                        st.text_area(
-                            "Answer",
-                            key=f"ans_{i}",
-                            ) 
-                else:
-                    st.session_state.carousel = [0]
-                    for j in range(len(st.session_state[f"ans_{i}"])-4):
-                        if st.session_state[f"ans_{i}"][j:j+4] == '/??/':
-                            st.session_state.carousel.append(j)
+                        if st.button(f"{i+1}.Create carousel"):
+                            st.session_state.refresh=1
+                            st.session_state[f"ans_{i}"] = '''{"type": "AdaptiveCard","$schema": "http://adaptivecards.io/schemas/adaptive-card.json","version": "1.6","body": []}/??/{"type": "AdaptiveCard","$schema": "http://adaptivecards.io/schemas/adaptive-card.json","version": "1.6","body": []}'''
+                        else:
+                            pass
+                    else:
+                        pass
                     
-                    for j in range(len(st.session_state.carousel)):
-                        if f"card_{i}_{j}" not in st.session_state:
-                            st.session_state[f"card_{i}_{j}"] = ''
+                    if st.session_state[f"ans_{i}"].find('/??/') == -1:
                         try:
-                            ans=json.loads(st.session_state[f"card_{i}_{j}"])
-                            num_clicks = my_component(botProperties,ans, key='Foo '+str(i+1)+str(j+1)+' Answer')
+                            ans=json.loads(st.session_state[f"ans_{i}"])
+                            num_clicks = my_component(botProperties,ans, key='Foo '+str(i+1)+' Answer')
                             k = "editcard"
                             adata = json.dumps(ans)
-                            if st.button(f"{i+1}.{j+1}.Edit"):
+                            if st.button(f"{i+1}.Edit"):
                                 st_javascript(f"sessionStorage.setItem('{k}', JSON.stringify({adata}));")
-                                st.session_state["editcard"] = f"card_{i}_{j}"
+                                st.session_state["editcard"] = f"ans_{i}"
                             else:
                                 pass
-                            if st.button(f"{i+1}.{j+1}.Delete card"):
+                            if st.button(f"{i+1}.Delete card"):
                                 st.session_state.refresh=1
-                                st.session_state[f"card_{i}_{j}"] = ''
-                                if j != len(st.session_state.carousel) - 1:
-                                    st.session_state[f"ans_{i}"] = st.session_state[f"ans_{i}"][:st.session_state.carousel[j]] + st.session_state[f"ans_{i}"][st.session_state.carousel[j+1]+4 if j == 0 else st.session_state.carousel[j+1]:]
-                                else:
-                                    st.session_state[f"ans_{i}"] = st.session_state[f"ans_{i}"][:st.session_state.carousel[j]]
+                                st.session_state[f"ans_{i}"] = ''
                             else:
                                 pass
-
-                            # if st.button(f"{i+1}.{j+1}.Add card"):
-                            #     st.session_state.refresh=1
-                            #     if j != len(st.session_state.carousel) - 1:
-                            #         st.session_state[f"ans_{i}"] = st.session_state[f"ans_{i}"][:st.session_state.carousel[j] if j == 0 else st.session_state.carousel[j]+4] +'''{"type": "AdaptiveCard","$schema": "http://adaptivecards.io/schemas/adaptive-card.json","version": "1.6","body": []}/??/'''+ st.session_state[f"ans_{i}"][st.session_state.carousel[j]+4:]
-                            #     else:
-                            #         st.session_state[f"ans_{i}"] = st.session_state[f"ans_{i}"][:st.session_state.carousel[j] if j == 0 else st.session_state.carousel[j]+4] +'''{"type": "AdaptiveCard","$schema": "http://adaptivecards.io/schemas/adaptive-card.json","version": "1.6","body": []}'''
-                            #     # st.session_state[f"card_{i}_{j+1}"] = '''{"type": "AdaptiveCard","$schema": "http://adaptivecards.io/schemas/adaptive-card.json","version": "1.6","body": []}'''
-                            # else:
-                            #     pass
-                            
                         except:
-                            if j != len(st.session_state.carousel) - 1:
-                                st.session_state[f"card_{i}_{j}"] = st.session_state[f"ans_{i}"][st.session_state.carousel[j] if j == 0 else st.session_state.carousel[j]+4 :st.session_state.carousel[j+1]]
-                            else:
-                                st.session_state[f"card_{i}_{j}"] = st.session_state[f"ans_{i}"][st.session_state.carousel[j] if j == 0 else st.session_state.carousel[j]+4 :]
-                    if st.button(f"{i+1}.Add card"):
-                        st.session_state.refresh=1
-                        st.session_state[f"ans_{i}"] = st.session_state[f"ans_{i}"] +'''/??/{"type": "AdaptiveCard","$schema": "http://adaptivecards.io/schemas/adaptive-card.json","version": "1.6","body": []}'''
-                        st.session_state[f"card_{i}_{j+1}"] = '''{"type": "AdaptiveCard","$schema": "http://adaptivecards.io/schemas/adaptive-card.json","version": "1.6","body": []}'''
+                            st.text_area(
+                                "Answer",
+                                key=f"ans_{i}",
+                                ) 
                     else:
-                        pass
+                        st.session_state.carousel = [0]
+                        for j in range(len(st.session_state[f"ans_{i}"])-4):
+                            if st.session_state[f"ans_{i}"][j:j+4] == '/??/':
+                                st.session_state.carousel.append(j)
+                        
+                        for j in range(len(st.session_state.carousel)):
+                            if f"card_{i}_{j}" not in st.session_state:
+                                st.session_state[f"card_{i}_{j}"] = ''
+                            try:
+                                ans=json.loads(st.session_state[f"card_{i}_{j}"])
+                                num_clicks = my_component(botProperties,ans, key='Foo '+str(i+1)+str(j+1)+' Answer')
+                                k = "editcard"
+                                adata = json.dumps(ans)
+                                if st.button(f"{i+1}.{j+1}.Edit"):
+                                    st_javascript(f"sessionStorage.setItem('{k}', JSON.stringify({adata}));")
+                                    st.session_state["editcard"] = f"card_{i}_{j}"
+                                else:
+                                    pass
+                                if st.button(f"{i+1}.{j+1}.Delete card"):
+                                    st.session_state.refresh=1
+                                    st.session_state[f"card_{i}_{j}"] = ''
+                                    if j != len(st.session_state.carousel) - 1:
+                                        st.session_state[f"ans_{i}"] = st.session_state[f"ans_{i}"][:st.session_state.carousel[j]] + st.session_state[f"ans_{i}"][st.session_state.carousel[j+1]+4 if j == 0 else st.session_state.carousel[j+1]:]
+                                    else:
+                                        st.session_state[f"ans_{i}"] = st.session_state[f"ans_{i}"][:st.session_state.carousel[j]]
+                                else:
+                                    pass
+
+                                # if st.button(f"{i+1}.{j+1}.Add card"):
+                                #     st.session_state.refresh=1
+                                #     if j != len(st.session_state.carousel) - 1:
+                                #         st.session_state[f"ans_{i}"] = st.session_state[f"ans_{i}"][:st.session_state.carousel[j] if j == 0 else st.session_state.carousel[j]+4] +'''{"type": "AdaptiveCard","$schema": "http://adaptivecards.io/schemas/adaptive-card.json","version": "1.6","body": []}/??/'''+ st.session_state[f"ans_{i}"][st.session_state.carousel[j]+4:]
+                                #     else:
+                                #         st.session_state[f"ans_{i}"] = st.session_state[f"ans_{i}"][:st.session_state.carousel[j] if j == 0 else st.session_state.carousel[j]+4] +'''{"type": "AdaptiveCard","$schema": "http://adaptivecards.io/schemas/adaptive-card.json","version": "1.6","body": []}'''
+                                #     # st.session_state[f"card_{i}_{j+1}"] = '''{"type": "AdaptiveCard","$schema": "http://adaptivecards.io/schemas/adaptive-card.json","version": "1.6","body": []}'''
+                                # else:
+                                #     pass
+                                
+                            except:
+                                if j != len(st.session_state.carousel) - 1:
+                                    st.session_state[f"card_{i}_{j}"] = st.session_state[f"ans_{i}"][st.session_state.carousel[j] if j == 0 else st.session_state.carousel[j]+4 :st.session_state.carousel[j+1]]
+                                else:
+                                    st.session_state[f"card_{i}_{j}"] = st.session_state[f"ans_{i}"][st.session_state.carousel[j] if j == 0 else st.session_state.carousel[j]+4 :]
+                        if st.button(f"{i+1}.Add card"):
+                            st.session_state.refresh=1
+                            st.session_state[f"ans_{i}"] = st.session_state[f"ans_{i}"] +'''/??/{"type": "AdaptiveCard","$schema": "http://adaptivecards.io/schemas/adaptive-card.json","version": "1.6","body": []}'''
+                            st.session_state[f"card_{i}_{j+1}"] = '''{"type": "AdaptiveCard","$schema": "http://adaptivecards.io/schemas/adaptive-card.json","version": "1.6","body": []}'''
+                        else:
+                            pass
                         
         if st.session_state.refresh==1:
             st.session_state.refresh = 0
