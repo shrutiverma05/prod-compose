@@ -37,13 +37,13 @@ for i in range(len(index_names)):
 async def query(q):
     return pipe[0].run(query=q, params={"Retriever": {"top_k": 2}})
 
-@app.get('/query/'+index_names[1])
-async def query(q):
-    return pipe[1].run(query=q, params={"Retriever": {"top_k": 2}})
+# @app.get('/query/'+index_names[1])
+# async def query(q):
+#     return pipe[1].run(query=q, params={"Retriever": {"top_k": 2}})
 
-@app.get('/query/'+index_names[2])
-async def query(q):
-    return pipe[2].run(query=q, params={"Retriever": {"top_k": 2}})
+# @app.get('/query/'+index_names[2])
+# async def query(q):
+#     return pipe[2].run(query=q, params={"Retriever": {"top_k": 2}})
 
 # @app.get("/initialized")
 # def check_status():
