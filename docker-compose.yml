@@ -10,8 +10,6 @@ services:
       - haystack
       - api
       - nlu
-      - streamlit
-      - node
     restart: always
     # environment:
     #   DOMAINS: 'uat.ml.novacept.io -> http://api:8000 , uat.nlu.ml.novacept.io -> http://nlu:8080 , uat.kb.novacept.io -> http://streamlit:8501 , uat.kb.node.novacept.io -> http://node:8051'
@@ -88,27 +86,7 @@ services:
     networks:
      - test-network
 
-   streamlit:
-    restart: always
-    container_name: streamlit-data
-    build: ./kb-editor/my_component
-    ports:
-     - "8501:8501"
-    networks:
-     - test-network
-
-   node:
-    restart: always
-    container_name: node-data
-    build: ./kb-editor/my_component/frontend
-    ports:
-     - "8051:8051"
-    networks:
-     - test-network
-    command: ["npm", "start"]
-    # volumes:
-    #   - /app/frontend
-    tty: true
+   
      
 networks:
   test-network:
