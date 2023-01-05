@@ -91,8 +91,8 @@ if not _RELEASE:
     import urllib.request
     import json
     
-    if "login_id" not in st.session_state:
-        st.session_state.login_id = ''
+    for k, v in st.session_state.items():
+        st.session_state[k] = v
     st.set_page_config(layout="wide")
     with open("designing.css") as source_des:
         st.markdown(f"<style>{source_des.read()}</style>",unsafe_allow_html=True)
@@ -118,8 +118,7 @@ if not _RELEASE:
         if "refresh" not in st.session_state:
             st.session_state.refresh = 0
         
-        for k, v in st.session_state.items():
-            st.session_state[k] = v
+        
 
         st.session_state["changedcard"] = st_javascript(f"JSON.parse(sessionStorage.getItem('changedcard'));")       
         if st.session_state["changedcard"] == 0:
