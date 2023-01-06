@@ -12,7 +12,7 @@ services:
       - nlu
       - streamlit
       - node
-    restart: always
+    restart: on-failure
     # environment:
     #   DOMAINS: 'uat.ml.novacept.io -> http://api:8000 , uat.nlu.ml.novacept.io -> http://nlu:8080 , uat.kb.novacept.io -> http://streamlit:8501 , uat.kb.node.novacept.io -> http://node:8051'
     #   STAGE: 'production' # Don't use production until staging works
@@ -26,7 +26,7 @@ services:
       - test-network
  
    elasticsearch:
-     restart: always
+     restart: on-failure
      container_name: "elasticsearch-main"
      image: "deepset/elasticsearch-countries-and-capitals"
      ports:
@@ -46,7 +46,7 @@ services:
         start_period: 45s 
 
    haystack:
-     restart: always
+     restart: on-failure
      container_name: "haystack"
      build: ./haystackv2
      networks:
@@ -61,7 +61,7 @@ services:
         condition: service_healthy
      
    api:
-     restart: always
+     restart: on-failure
      container_name: "haystack_api"
      build: ./haystackv2/api
      ports:
@@ -77,7 +77,7 @@ services:
       elasticsearch:
          condition: service_healthy
    nlu:
-    restart: always
+    restart: on-failure
     build: ./rasa_nlu
     container_name: rasa-nlu
     volumes:
@@ -89,7 +89,7 @@ services:
      - test-network
 
    streamlit:
-    restart: always
+    restart: on-failure
     container_name: streamlit-data
     build: ./kb-editor/my_component
     ports:
@@ -98,7 +98,7 @@ services:
      - test-network
 
    node:
-    restart: always
+    restart: on-failure
     container_name: node-data
     build: ./kb-editor/my_component/frontend
     ports:
