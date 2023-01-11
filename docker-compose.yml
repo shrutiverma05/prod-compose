@@ -115,3 +115,4 @@ networks:
   test-network:
 volumes:
   https-portal-data:
+  /data/ssl_certs:
