@@ -7,13 +7,13 @@ import csv
 import time
 
 data_file = 'faq_data.csv'
-index_names = ['haytest','vootours','gts']
+index_names = ['gts']
 document_store = []
 retriever = []
 pipe = []
 host = os.environ.get("ELASTICSEARCH_HOST", "localhost")
 #hostedserverUrl=os.getenv("DOCUMENTSTORE_ENDPOINT", "http://localhost:8060/")
-hostedserverUrl = "https://novacorpweb.azurewebsites.net/"
+hostedserverUrl = "https://novaeu.azurewebsites.net/"
 
 def duplicate(data_file,index_name):
     path = data_file
