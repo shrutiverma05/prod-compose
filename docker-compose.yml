@@ -22,7 +22,7 @@ services:
       - .env
     volumes: 
       - https-portal-data:/var/lib/https-portal
-      - /data/ssl_certs:/var/lib/https-portal
+      
     networks:
        - test-network
  
@@ -115,4 +115,4 @@ networks:
   test-network:
 volumes:
   https-portal-data:
-  /data/ssl_certs:
+  
