@@ -10,3 +10,10 @@ nlu:
   examples: |
     - restart
     - start over
+
+- intent: livechat
+  examples: |
+    - Talk to human 
+    - live agent
+    - chat to human
+    - livechat

@@ -3,6 +3,7 @@ version: "3.1"
 intents:
   - start_over
   - callback
+  - livechat
   
 responses:
   utter_greet:

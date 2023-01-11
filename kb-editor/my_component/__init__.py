@@ -1,6 +1,8 @@
 import os
 import streamlit.components.v1 as components
-
+from dotenv import load_dotenv
+import os
+load_dotenv()
 
 # Create a _RELEASE constant. We'll set this to False while we're developing
 # the component, and True when we're ready to package and distribute it.
@@ -28,7 +30,7 @@ if not _RELEASE:
         # Pass `url` here to tell Streamlit that the component will be served
         # by the local dev server that you run via `npm run start`.
         # (This is useful while your component is in development.)
-        url="https://kb.node.novacept.io",
+        url=os.environ['nodeURL']
     )
 else:
     # When we're distributing a production version of the component, we'll
@@ -83,42 +85,83 @@ def my_component(botProp,name, key=None):
 # app: `$ streamlit run my_component/__init__.py`
 if not _RELEASE:
     import streamlit as st
-    from math import ceil
     from streamlit_javascript import st_javascript
     import csv
     import time
     import ftplib
     import urllib.request
     import json
-    
-    for k, v in st.session_state.items():
-        st.session_state[k] = v
+    from math import ceil
+
     st.set_page_config(layout="wide")
+
+    # Add Designing from css file
+
     with open("designing.css") as source_des:
         st.markdown(f"<style>{source_des.read()}</style>",unsafe_allow_html=True)
+
+    # Check Login Authentication
+
     if "authentication_status" not in st.session_state:
         st.session_state["authentication_status"] = None
     if st.session_state["authentication_status"]:
-        
+        st.session_state.login_id = st.session_state.login_id
+        if "page" in st.session_state:
+            st.session_state.page = st.session_state.page
+        st.title('Knowledge Base')
         data_file = 'botProperties.json'
-        url = f'https://novaeu.azurewebsites.net/{st.session_state["login_id"]}/{data_file}'
+        url = f'{os.environ["FTPurl"]}{st.session_state["login_id"]}/{data_file}'
         urllib.request.urlretrieve(url, data_file)
         with open(data_file, encoding='cp1252') as botp:
             botProperties = json.load(botp)
-        # num_click = _component_func(botProp=botProperties, key=None, default=0)
-        # from PIL import Image
-        # image = Image.open('novacept.webp')
-        # st.image(image, width=100)
 
-        st.title('Novacept Knowledge Base')
+        # Initialize Session state keys
 
         if "num_questions" not in st.session_state:
             st.session_state.num_questions = 0
-        
+
+        if "question" not in st.session_state:
+            st.session_state.question = []
+
+        if "answer" not in st.session_state:
+            st.session_state.answer = []
+
+        if "qindex" not in st.session_state:
+            st.session_state.qindex = []
+
         if "refresh" not in st.session_state:
             st.session_state.refresh = 0
+
+        # for k, v in st.session_state.items():
+        #     st.session_state[k] = v
+
+        def delete_qna(i):
+            st.session_state['qindex'].pop(i)
+            st.session_state['answer'].pop(i)
+            st.session_state['question'].pop(i)
+            st.session_state["num_questions"] -= 1
+
+        def delete_question(i,j):
+            st.session_state.qindex[i] -= 1
+            st.session_state['question'][i].pop(j)
         
+        def edit_card(i,j,ans):
+            k = "editcard"
+            adata = json.dumps(ans)
+            st_javascript(f"sessionStorage.setItem('{k}', JSON.stringify({adata}));")
+            st.session_state["editcard"] = [i,j]
         
+        def delete_card(i,j):
+            if j != len(st.session_state.carousel) - 2:
+                st.session_state.answer[i] = st.session_state.answer[i][:st.session_state.carousel[j]] + st.session_state.answer[i][st.session_state.carousel[j+1]+4 if j == 0 else st.session_state.carousel[j+1]:]
+            else:
+                st.session_state.answer[i] = st.session_state.answer[i][:st.session_state.carousel[j]]
+            st.session_state[f"card_{i}"].pop(j)
+        
+        def add_card(i):
+            st.session_state.refresh=1
+            st.session_state.answer[i] = st.session_state.answer[i] +'''/??/{"type": "AdaptiveCard","$schema": "http://adaptivecards.io/schemas/adaptive-card.json","version": "1.6","body": []}'''
+            st.session_state[f"card_{i}"].append('''{"type": "AdaptiveCard","$schema": "http://adaptivecards.io/schemas/adaptive-card.json","version": "1.6","body": []}''')
 
         st.session_state["changedcard"] = st_javascript(f"JSON.parse(sessionStorage.getItem('changedcard'));")       
         if st.session_state["changedcard"] == 0:
@@ -127,27 +170,28 @@ if not _RELEASE:
             st_javascript(f"(sessionStorage.removeItem('changedcard'));")
             st_javascript(f"(sessionStorage.removeItem('editcard'));")
             testv = json.dumps(st.session_state["changedcard"])
-            st.session_state[st.session_state["editcard"]] = testv
-            if st.session_state["editcard"][:4] == 'card':
-                under = []
-                for i in range(len(st.session_state["editcard"])):
-                    if st.session_state["editcard"][i] == '_':
-                        under.append(i)
-                ival = int(st.session_state["editcard"][5:int(under[1])])
-                jval = int(st.session_state["editcard"][int(under[1])+1:])
-                
-                if jval != len(st.session_state.carousel) - 1:
-                    st.session_state[f"ans_{ival}"] = st.session_state[f"ans_{ival}"][:st.session_state.carousel[jval] if jval == 0 else st.session_state.carousel[jval]+4] + testv +  st.session_state[f"ans_{ival}"][st.session_state.carousel[jval+1]:]
+            if type(st.session_state["editcard"]) == list:
+                ival = st.session_state["editcard"][0]
+                jval = st.session_state["editcard"][1]
+                st.session_state[f"card_{ival}"][jval] = testv
+                if jval != len(st.session_state.carousel) - 2:
+                    st.session_state.answer[ival] = st.session_state.answer[ival][:st.session_state.carousel[jval] if jval == 0 else st.session_state.carousel[jval]+4] + testv +  st.session_state.answer[ival][st.session_state.carousel[jval+1]:]
                 else:
-                    st.session_state[f"ans_{ival}"] = st.session_state[f"ans_{ival}"][:st.session_state.carousel[jval] if jval == 0 else st.session_state.carousel[jval]+4] + testv
-                
+                    st.session_state.answer[ival] = st.session_state.answer[ival][:st.session_state.carousel[jval] if jval == 0 else st.session_state.carousel[jval]+4] + testv
+
+            else:
+                st.session_state.answer[st.session_state["editcard"]] = testv
+
         head1, head2 = st.columns([3,3])
+
+        # Load the csv file from server to the session state
+
         if head1.button('Load'):
             head1.write('File Loaded')
             indata = []
             index = set()
             data_file = 'faq_data.csv'
-            url = f'https://novaeu.azurewebsites.net/{st.session_state["login_id"]}/{data_file}'
+            url = f'{os.environ["FTPurl"]}{st.session_state["login_id"]}/{data_file}'
             urllib.request.urlretrieve(url, data_file)
             with open(data_file, mode ='r',encoding='cp1252') as file:
                 csvFile = csv.reader(file)
@@ -156,6 +200,7 @@ if not _RELEASE:
             indata.pop(0)
             question = []
             ans = []
+            qindex = []
             for i in range(len(indata)):
                 index.add(indata[i][2])
             index = list(index)
@@ -167,12 +212,12 @@ if not _RELEASE:
             for i in indata:
                 question[int(i[2])-1].append(i[0])
                 ans[int(i[2])-1] = i[1]
+            for i in question:
+                qindex.append(len(i))
             st.session_state.num_questions = len(ans)
-            for i in range(st.session_state.num_questions):
-                st.session_state[f"qa_num_{i}"] = len(question[i])
-                st.session_state[f"ans_{i}"] = ans[i]
-                for j in range(st.session_state[f"qa_num_{i}"]):
-                    st.session_state[f"question_{i}_{j}"] = question[i][j]
+            st.session_state.question = question
+            st.session_state.answer = ans
+            st.session_state.qindex = qindex
             st.session_state.refresh = 1
         else:
             pass
@@ -182,16 +227,16 @@ if not _RELEASE:
             save = []
             fields = ['question','answer','index']
             for i in range(st.session_state['num_questions']):
-                for j in range(st.session_state[f"qa_num_{i}"]):
+                for j in range(len(st.session_state.question[i])):
                     row = []
-                    row.append(st.session_state[f"question_{i}_{j}"])
-                    row.append(st.session_state[f"ans_{i}"])
+                    row.append(st.session_state.question[i][j])
+                    row.append(st.session_state.answer[i])
                     row.append(str(i+1))
                     save.append(row)
             
-            HOSTNAME = "waws-prod-db3-177.ftp.azurewebsites.windows.net"
-            USERNAME = "novaeu\$novaeu"
-            PASSWORD = "r8d0hfMcM1ssZ0K4jspHbQ1zwdqjH29PvMnMzFugnpyrfZ1kZfG6Yc9kJbi7"
+            HOSTNAME = "waws-prod-bay-153.ftp.azurewebsites.windows.net"
+            USERNAME = "novaCorpWeb\$novaCorpWeb"
+            PASSWORD = "B4sdhvCuwvH9XTCohRJhuQPf01n4xf0phPz2N1L0XlKY6sNWb0DkxxlTbpnu"
 
             # Connect FTP Server
             ftp_server = ftplib.FTP(HOSTNAME, USERNAME, PASSWORD)
@@ -211,17 +256,23 @@ if not _RELEASE:
             pass
 
         with st.sidebar:
-            num_questions = st.number_input(
-                "QnA Pairs",
-                min_value=0,
-                step=1,
-                key="num_questions",
-            )
+
+            # Increase the Total number of QnA
+
+            if st.button("Add QnA"):
+                st.session_state["num_questions"] += 1
+            else:
+                pass
+
+            # Paging inputs
+
             page_columns = st.columns(2)
-            a_per_page = page_columns[1].slider('Answers per Page',1, 30,15, key='a_per_page')
-            last_page = ceil(num_questions/a_per_page)
-            page = page_columns[0].selectbox('Page',range(1,last_page+1))
+            a_per_page = page_columns[1].slider('Answers per Page',1, 30,10, key='a_per_page')
+            last_page = ceil(st.session_state.num_questions/a_per_page)
+            page = page_columns[0].selectbox('page',range(1,last_page+1))
+
             # Compare current page selection to first and last page number
+
             if page == 1:
                 first = True
             else:
@@ -230,129 +281,122 @@ if not _RELEASE:
                 last = True
             else:
                 last = False
+
         answer_index = st.session_state.num_questions
+
+        # Getting the range of current page
+
         if answer_index > 0:
             first = (page-1)*a_per_page
             next = min(first + a_per_page, answer_index)
-            for i in range(first,next):  
         
-                if f"qa_num_{i}" not in st.session_state:
-                    st.session_state[f"qa_num_{i}"] = 0
+        # Rendering QnA on current page
 
-                if f"ans_{i}" not in st.session_state:
-                    st.session_state[f"ans_{i}"] = ""
+            for i in range(first,next):
+
+                if i >= len(st.session_state.question):
+                    st.session_state.question.append([])
+                
+                if i >= len(st.session_state.answer):
+                    st.session_state.answer.append('')
+                
+                if i >= len(st.session_state.qindex):
+                    st.session_state.qindex.append(0)
 
                 con = st.container()
-                qa_num = con.number_input(
-                    str(i + 1) + ". Add or remove Questions",
-                    min_value=0,
-                    step=1,
-                    key=f"qa_num_{i}",
-                )
-                col1, col2 = con.columns([5, 5])
-                for j in range(qa_num):
-                    if f"question_{i}_{j}" not in st.session_state:
-                        st.session_state[f"question_{i}_{j}"] = ""
 
-                    col1.text_input(
-                        "Questions",
-                        label_visibility="visible" if j == 0 else "collapsed",
-                        key=f"question_{i}_{j}",
+                #Add Question to QnA
+
+                if con.button("Add Questions", key = f"{i}.Add Questions"):
+                    st.session_state.qindex[i] += 1
+                else:
+                    pass
+                
+                # Creating columns for All Questions and an Answer of current QnA
+
+                col1, col2 = con.columns([5, 5])
+                col1.text("Questions")
+                col2.text("Answer")
+
+                # Rendering all questions of current QnA
+
+                for j in range(st.session_state.qindex[i]):
+                    if j >= len(st.session_state.question[i]):
+                        st.session_state.question[i].append('')
+                    
+                    st.session_state.question[i][j] = col1.text_input(
+                        f"question_{i}_{j}",
+                        label_visibility="collapsed",
+                        value = st.session_state.question[i][j]
                     )
 
+                    # Delete particular question in QnA
+
+                    col1.button("❌", key = f"{i}.{j}.❌", on_click=delete_question, args=[i,j])
+                
+                # Rendering the Answer
+
                 with col2:
-                    if f"ans_{i}" not in st.session_state:
-                        st.session_state[f"ans_{i}"] = ''
-                    if st.session_state[f"ans_{i}"] == '':
-                        if st.button(f"{i+1}.Create card"):
+                    if st.session_state.answer[i] == '':
+                        if st.button("Create card", key = f"{i+1}.Create card"):
                             st.session_state.refresh=1
-                            st.session_state[f"ans_{i}"] = '''{"type": "AdaptiveCard","$schema": "http://adaptivecards.io/schemas/adaptive-card.json","version": "1.6","body": []}'''
+                            st.session_state.answer[i] = '''{"type": "AdaptiveCard","$schema": "http://adaptivecards.io/schemas/adaptive-card.json","version": "1.6","body": []}'''
                         else:
                             pass
                         if st.button(f"{i+1}.Create carousel"):
                             st.session_state.refresh=1
-                            st.session_state[f"ans_{i}"] = '''{"type": "AdaptiveCard","$schema": "http://adaptivecards.io/schemas/adaptive-card.json","version": "1.6","body": []}/??/{"type": "AdaptiveCard","$schema": "http://adaptivecards.io/schemas/adaptive-card.json","version": "1.6","body": []}'''
+                            st.session_state.answer[i] = '''{"type": "AdaptiveCard","$schema": "http://adaptivecards.io/schemas/adaptive-card.json","version": "1.6","body": []}/??/{"type": "AdaptiveCard","$schema": "http://adaptivecards.io/schemas/adaptive-card.json","version": "1.6","body": []}'''
                         else:
                             pass
-                    else:
-                        pass
-                    
-                    if st.session_state[f"ans_{i}"].find('/??/') == -1:
+                    if st.session_state.answer[i].find('/??/') == -1:
                         try:
-                            ans=json.loads(st.session_state[f"ans_{i}"])
+                            ans=json.loads(st.session_state.answer[i])
                             num_clicks = my_component(botProperties,ans, key='Foo '+str(i+1)+' Answer')
                             k = "editcard"
                             adata = json.dumps(ans)
-                            if st.button(f"{i+1}.Edit"):
+                            if st.button("Edit", key = f"{i+1}.Edit"):
                                 st_javascript(f"sessionStorage.setItem('{k}', JSON.stringify({adata}));")
-                                st.session_state["editcard"] = f"ans_{i}"
+                                st.session_state["editcard"] = i
                             else:
                                 pass
-                            if st.button(f"{i+1}.Delete card"):
+                            if st.button("Delete card", key = f"{i+1}.Delete card"):
                                 st.session_state.refresh=1
-                                st.session_state[f"ans_{i}"] = ''
+                                st.session_state.answer[i] = ''
                             else:
                                 pass
-                        except:
-                            st.text_area(
-                                "Answer",
-                                key=f"ans_{i}",
-                                ) 
+                        except:   
+                            st.session_state.answer[i] = st.text_area(f"ans_{i}", label_visibility="collapsed", value=st.session_state.answer[i])
                     else:
                         st.session_state.carousel = [0]
-                        for j in range(len(st.session_state[f"ans_{i}"])-4):
-                            if st.session_state[f"ans_{i}"][j:j+4] == '/??/':
+                        for j in range(len(st.session_state.answer[i])-4):
+                            if st.session_state.answer[i][j:j+4] == '/??/':
                                 st.session_state.carousel.append(j)
+                        st.session_state.carousel.append(len(st.session_state.answer[i]))
+                        if f"card_{i}" not in st.session_state:
+                            st.session_state[f"card_{i}"] = []
+                            for j in range(len(st.session_state.carousel)-1):
+                                st.session_state[f"card_{i}"].append('')
                         
-                        for j in range(len(st.session_state.carousel)):
-                            if f"card_{i}_{j}" not in st.session_state:
-                                st.session_state[f"card_{i}_{j}"] = ''
-                            try:
-                                ans=json.loads(st.session_state[f"card_{i}_{j}"])
+                        try:
+                            for j in range(len(st.session_state[f"card_{i}"])):
+                                ans=json.loads(st.session_state[f"card_{i}"][j])
                                 num_clicks = my_component(botProperties,ans, key='Foo '+str(i+1)+str(j+1)+' Answer')
-                                k = "editcard"
-                                adata = json.dumps(ans)
-                                if st.button(f"{i+1}.{j+1}.Edit"):
-                                    st_javascript(f"sessionStorage.setItem('{k}', JSON.stringify({adata}));")
-                                    st.session_state["editcard"] = f"card_{i}_{j}"
-                                else:
-                                    pass
-                                if st.button(f"{i+1}.{j+1}.Delete card"):
-                                    st.session_state.refresh=1
-                                    st.session_state[f"card_{i}_{j}"] = ''
-                                    if j != len(st.session_state.carousel) - 1:
-                                        st.session_state[f"ans_{i}"] = st.session_state[f"ans_{i}"][:st.session_state.carousel[j]] + st.session_state[f"ans_{i}"][st.session_state.carousel[j+1]+4 if j == 0 else st.session_state.carousel[j+1]:]
-                                    else:
-                                        st.session_state[f"ans_{i}"] = st.session_state[f"ans_{i}"][:st.session_state.carousel[j]]
-                                else:
-                                    pass
-
-                                # if st.button(f"{i+1}.{j+1}.Add card"):
-                                #     st.session_state.refresh=1
-                                #     if j != len(st.session_state.carousel) - 1:
-                                #         st.session_state[f"ans_{i}"] = st.session_state[f"ans_{i}"][:st.session_state.carousel[j] if j == 0 else st.session_state.carousel[j]+4] +'''{"type": "AdaptiveCard","$schema": "http://adaptivecards.io/schemas/adaptive-card.json","version": "1.6","body": []}/??/'''+ st.session_state[f"ans_{i}"][st.session_state.carousel[j]+4:]
-                                #     else:
-                                #         st.session_state[f"ans_{i}"] = st.session_state[f"ans_{i}"][:st.session_state.carousel[j] if j == 0 else st.session_state.carousel[j]+4] +'''{"type": "AdaptiveCard","$schema": "http://adaptivecards.io/schemas/adaptive-card.json","version": "1.6","body": []}'''
-                                #     # st.session_state[f"card_{i}_{j+1}"] = '''{"type": "AdaptiveCard","$schema": "http://adaptivecards.io/schemas/adaptive-card.json","version": "1.6","body": []}'''
-                                # else:
-                                #     pass
+                                st.button("Edit", key = f"{i+1}.{j+1}.Edit", on_click=edit_card, args=[i,j,ans])
+                                st.button("Delete", key = f"{i+1}.{j+1}.Delete card", on_click=delete_card, args=[i,j])
                                 
-                            except:
-                                if j != len(st.session_state.carousel) - 1:
-                                    st.session_state[f"card_{i}_{j}"] = st.session_state[f"ans_{i}"][st.session_state.carousel[j] if j == 0 else st.session_state.carousel[j]+4 :st.session_state.carousel[j+1]]
-                                else:
-                                    st.session_state[f"card_{i}_{j}"] = st.session_state[f"ans_{i}"][st.session_state.carousel[j] if j == 0 else st.session_state.carousel[j]+4 :]
-                        if st.button(f"{i+1}.Add card"):
-                            st.session_state.refresh=1
-                            st.session_state[f"ans_{i}"] = st.session_state[f"ans_{i}"] +'''/??/{"type": "AdaptiveCard","$schema": "http://adaptivecards.io/schemas/adaptive-card.json","version": "1.6","body": []}'''
-                            st.session_state[f"card_{i}_{j+1}"] = '''{"type": "AdaptiveCard","$schema": "http://adaptivecards.io/schemas/adaptive-card.json","version": "1.6","body": []}'''
-                        else:
-                            pass
-                        
+                        except:
+                            for j in range(len(st.session_state.carousel)-1):
+                                st.session_state[f"card_{i}"][j] = st.session_state.answer[i][st.session_state.carousel[j] if j == 0 else st.session_state.carousel[j]+4 :st.session_state.carousel[j+1]]
+                        st.button("Add Card", key = f"{i+1}.{j+1}.Add card", on_click=add_card, args=[i])
+
+                con.button("Delete QnA", key = f"{i}.Delete QnA", on_click=delete_qna, args=[i])
+                con.text("-------------------------------------------------------------------------------------------------------------------------")
+            
         if st.session_state.refresh==1:
             st.session_state.refresh = 0
             time.sleep(3)
             st.experimental_rerun()
+
     elif st.session_state["authentication_status"] == False:
         st.error('Username/password is incorrect')
     elif st.session_state["authentication_status"] == None:

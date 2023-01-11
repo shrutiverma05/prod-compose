@@ -23,7 +23,7 @@ services:
     volumes: 
       - https-portal-data:/var/lib/https-portal
     networks:
-      - test-network
+       - test-network
  
    elasticsearch:
      restart: on-failure
@@ -37,7 +37,7 @@ services:
     #   - discovery.type=single-node
     #   - "ES_JAVA_OPTS=-Xms300m -Xmx1024m"
      env_file:
-       - .env.elasticsearch
+      - .env.elasticsearch
      healthcheck:
         test: curl --fail http://localhost:9200/_cat/health || exit 1
         interval: 10s
@@ -55,7 +55,7 @@ services:
     #   # See rest_api/pipeline/pipelines.haystack-pipeline.yml for configurations of Search & Indexing Pipeline.
     #    - ELASTICSEARCH_HOST=elasticsearch
      env_file:
-       - .env.haystack
+      - .env.haystack
      depends_on:
       elasticsearch:
         condition: service_healthy

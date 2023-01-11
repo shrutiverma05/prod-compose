@@ -5,7 +5,7 @@ COPY . /app
 
 RUN pip install streamlit
 RUN pip install streamlit_javascript
-
+RUN pip install python-dotenv
 
 EXPOSE 8501
 EXPOSE 8080
