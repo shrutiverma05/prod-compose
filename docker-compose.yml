@@ -22,7 +22,6 @@ services:
       - .env
     volumes: 
       - https-portal-data:/var/lib/https-portal
-      
     networks:
        - test-network
  
@@ -50,6 +49,8 @@ services:
      restart: on-failure
      container_name: "haystack"
      build: ./haystackv2
+     ports:
+       - 8001:8001
      networks:
        - test-network
     #  environment:
@@ -115,4 +116,3 @@ networks:
   test-network:
 volumes:
   https-portal-data:
-  

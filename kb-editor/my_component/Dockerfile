@@ -10,4 +10,4 @@ RUN pip install python-dotenv
 EXPOSE 8501
 EXPOSE 8080
 
-CMD ["streamlit", "run", "__init__.py"]
+CMD ["streamlit", "run", "Knowledgebase.py"]

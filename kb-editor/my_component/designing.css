@@ -1,6 +1,9 @@
 :root {
     --primary: #561f76;
-    --white: #ffffff;
+    --iconColor: #ffffff;
+    --textColor:#000000;
+    --buttonTextColor:#ffffff;
+    --gradint:linear-gradient(to right top, #ffffff, #f7f5fb, #f1eaf6, #ecdff0, #e9d3e9);
 }
 @font-face {
     font-family:"NovaBotFont";
@@ -8,9 +11,10 @@
 } 
   
 body {
+    font-size: 100%;
     font-family: "Helvetica", Sans-serif;
 }
-span.css-pkbazv.e1fqkh3o5{
+/* span.css-pkbazv.e1fqkh3o5{
     color: var(--primary); 
 }
 span.css-10trblm.e16nr0p30{
@@ -83,14 +87,7 @@ button.css-9s5bis.edgvbvh3:focus{
 [data-testid|="stHeader"]{
     background-color: var(--primary);
     height: 3rem; 
-}
-
-[data-testid="stSidebarNav"] {
-    background-image: url("https://i.postimg.cc/mcgHp2Mw/Novacept-Final-logo-01.png");
-    background-repeat: no-repeat;
-    padding-top: 14px;
-    background-position: 17px -25px;
-}
+} */
 /* [data-testid="stSidebarNav"]::before {
     content: "Novacept";
     margin-left: 20px;
@@ -99,13 +96,8 @@ button.css-9s5bis.edgvbvh3:focus{
     position: relative;
     top: 100px;
 } */
-[data-testid="stHeader"] {
-    background-image: url("https://i.postimg.cc/mcgHp2Mw/Novacept-Final-logo-01.png");
-    background-repeat: no-repeat;
-    background-position: 57px -65px;
-}
 
-button.step-down.css-1r8izn3.e1jwn65y1:hover{
+/* button.step-down.css-1r8izn3.e1jwn65y1:hover{
     background-color: var(--primary);
 }
 button.step-up.css-1r8izn3.e1jwn65y1:hover{
@@ -117,8 +109,12 @@ label.css-81oif8.effi0qh3{
     padding: 5px;
     border-radius: 5px;
 }
-
-
+[data-testid="stTickBar"] {
+    color: var(--white);
+}
+[data-testid="stMarkdownContainer"] {
+    color: var(--white);
+}
 @media (max-width: 612px) {
     [data-testid|="stSidebar"]{
         background-color: var(--primary);
@@ -126,10 +122,145 @@ label.css-81oif8.effi0qh3{
     div.block-container.css-18e3th9.egzxvld2{
         padding: 4rem 1rem 10rem !important;
     }
-    /* div.element-container.css-h7j2le.e1tzin5v3{
-        display: none !important;
-    } */
     span.css-10trblm.e16nr0p30{
         font-size: 94% !important;
+    }
+} */
+
+
+
+[data-testid="stSidebar"] {
+    background-color: #e1d2e9 !important;
+    background-image: linear-gradient(to bottom, #ffffff, #cdc6e0, #a18ebf, #7a589b, #561f76);
+}
+footer{
+    display: none !important;
+}
+
+
+[data-testid="stHeader"] {
+    background-color: var(--primary);
+}
+
+button{
+    background-color: var(--primary) !important;
+    color: var(--buttonTextColor) !important;
+}
+button:hover{
+    background-color: var(--primary) !important;
+    color: var(--buttonTextColor) !important;
+    border-color: var(--buttonTextColor) !important;
+}
+
+button:focus:not(:active) {
+    border-color: var(--buttonTextColor) !important;
+    color: var(--buttonTextColor) !important;
+}
+button:focus {
+    box-shadow: var(--primary) !important;
+    outline: none !important;
+}
+button:active{
+    border-color: var(--primary) !important;
+    color: var(--buttonTextColor) !important;
+}
+
+a.css-1hverof{
+    background-color: var(--buttonTextColor) !important;
+}
+a.css-17nby6i:visited{
+    background-color: rgb(250 234 255 / 89%) !important;
+}
+a.css-17nby6i{
+    background-color: #ccb7d58a !important; 
+}
+a.css-17nby6i:hover{
+    background-color: rgb(250 234 255 / 89%)  
+}
+section.main{
+    background-image: var(--gradint) !important;
+    background-color: #efedef;
+}
+.stTextInput>div{
+    background-color: rgb(255 255 255) !important;
+    border-bottom-color: rgb(0 5 16) !important;  
+    height: 40.4px !important;
+}
+
+
+[data-testid="tooltipHoverTarget"]>button {
+    height: 40.4px !important;
+}
+
+textarea{
+    background-color: var(--buttonTextColor) !important;
+    min-height: 150px !important;
+}
+.css-ht50i{
+    margin-top: 2.4rem !important;
+}
+
+.block-container{
+    padding-top: 0 !important;
+}
+
+.css-1k67eer{
+    margin-top: 3rem !important;
+}
+
+input{
+    background-color: var(--buttonTextColor) !important;
+}
+.css-yzb2at.e13vu3m50{
+    color: var(--buttonTextColor) !important;
+}
+.stAlert>div{
+    background-color: #561f76 !important;
+    margin-top: 1rem !important;
+}
+h1,#knowledge-base-for-gts{
+    color: var(--primary) !important;
+}
+.css-j0nf8i{
+    color: var(--buttonTextColor) !important;
+}
+
+[data-testid|="stStatusWidget"]>div>label{
+   color: var(--buttonTextColor);
+}
+[data-testid|="stStatusWidget"]>div>img{
+    filter: drop-shadow(0px 0px 4px #ffffff) !important;
+}
+
+.css-demzbm{
+    background-color: var(--textColor);
+}
+.css-demzbm:focus{
+    box-shadow: rgb(36 31 31 / 50%) 0px 0px 0px 0.2rem !important;
+}
+
+
+.StyledThumbValue{
+    color: var(--textColor);
+}
+
+@media (max-width: 640px){
+    [data-testid|="stHorizontalBlock"]{
+        flex-wrap: nowrap !important;
+    }
+    .css-ht50i {
+        min-width: 40px !important;
+    }
+    .css-1bb354k {
+        min-width: auto !important;
+    }
+    .css-keje6w {
+        min-width: auto !important;
+    }
+}
+
+@media (max-width:576px){
+    [data-testid="stTooltipIcon"]>div>button.css-1x8cf1d {
+        height: 40.45px !important;
     }
 }

@@ -90,15 +90,45 @@ if not _RELEASE:
     import time
     import ftplib
     import urllib.request
+    import requests
     import json
     from math import ceil
+    import base64
 
-    st.set_page_config(layout="wide")
+    st.set_page_config(layout="wide",page_title='Novacept Connect',page_icon = 'NovaceptMark.png',initial_sidebar_state = 'auto')
 
     # Add Designing from css file
 
     with open("designing.css") as source_des:
         st.markdown(f"<style>{source_des.read()}</style>",unsafe_allow_html=True)
+    
+    # Adding Images from local
+
+    def add_bg_from_local(image_file, image_file2):
+        with open(image_file, "rb") as image_file:
+            encoded_string = base64.b64encode(image_file.read())
+        with open(image_file2, "rb") as image_file2:
+            encoded_string2 = base64.b64encode(image_file2.read())
+        st.markdown(
+        f"""
+        <style>
+        [data-testid="stSidebarNav"] {{
+            background-image: url(data:image/{"png"};base64,{encoded_string.decode()});
+            background-repeat: no-repeat;
+            background-position: 15px 47px;
+            background-size: 200px auto;
+        }}
+        [data-testid="stHeader"] {{
+            background-image: url(data:image/{"png"};base64,{encoded_string2.decode()});
+            background-repeat: no-repeat;
+            background-position: 46px -66px;
+            background-size: 180px auto;
+        }}
+        </style>
+        """,
+        unsafe_allow_html=True
+        )
+    add_bg_from_local('NovaceptcolorLogo.png','novaceptlogo.png')
 
     # Check Login Authentication
 
@@ -108,7 +138,13 @@ if not _RELEASE:
         st.session_state.login_id = st.session_state.login_id
         if "page" in st.session_state:
             st.session_state.page = st.session_state.page
-        st.title('Knowledge Base')
+
+        # Title of the page
+
+        st.title(f'Knowledge Base for {st.session_state.login_id}')
+
+        # Getting Botproperties file
+
         data_file = 'botProperties.json'
         url = f'{os.environ["FTPurl"]}{st.session_state["login_id"]}/{data_file}'
         urllib.request.urlretrieve(url, data_file)
@@ -134,6 +170,8 @@ if not _RELEASE:
 
         # for k, v in st.session_state.items():
         #     st.session_state[k] = v
+
+        # Button Functions
 
         def delete_qna(i):
             st.session_state['qindex'].pop(i)
@@ -162,6 +200,8 @@ if not _RELEASE:
             st.session_state.refresh=1
             st.session_state.answer[i] = st.session_state.answer[i] +'''/??/{"type": "AdaptiveCard","$schema": "http://adaptivecards.io/schemas/adaptive-card.json","version": "1.6","body": []}'''
             st.session_state[f"card_{i}"].append('''{"type": "AdaptiveCard","$schema": "http://adaptivecards.io/schemas/adaptive-card.json","version": "1.6","body": []}''')
+
+        # Updating the edit made on the Adaptivecard in Create card page
 
         st.session_state["changedcard"] = st_javascript(f"JSON.parse(sessionStorage.getItem('changedcard'));")       
         if st.session_state["changedcard"] == 0:
@@ -222,38 +262,43 @@ if not _RELEASE:
         else:
             pass
 
-        if head2.button('Save'):
-            head2.write('File Saved')
-            save = []
-            fields = ['question','answer','index']
-            for i in range(st.session_state['num_questions']):
-                for j in range(len(st.session_state.question[i])):
-                    row = []
-                    row.append(st.session_state.question[i][j])
-                    row.append(st.session_state.answer[i])
-                    row.append(str(i+1))
-                    save.append(row)
-            
-            HOSTNAME = "waws-prod-bay-153.ftp.azurewebsites.windows.net"
-            USERNAME = "novaCorpWeb\$novaCorpWeb"
-            PASSWORD = "B4sdhvCuwvH9XTCohRJhuQPf01n4xf0phPz2N1L0XlKY6sNWb0DkxxlTbpnu"
+        # Save the csv file back to ftp server from the session state
 
-            # Connect FTP Server
-            ftp_server = ftplib.FTP(HOSTNAME, USERNAME, PASSWORD)
-            
-            # force UTF-8 encoding
-            ftp_server.encoding = "utf-8"
+        if st.session_state['num_questions'] > 0:
+            if head2.button('Save'):
+                head2.write('File Saved')
+                save = []
+                fields = ['question','answer','index']
+                for i in range(st.session_state['num_questions']):
+                    for j in range(len(st.session_state.question[i])):
+                        row = []
+                        row.append(st.session_state.question[i][j])
+                        row.append(st.session_state.answer[i])
+                        row.append(str(i+1))
+                        save.append(row)
+                
+                HOSTNAME = "waws-prod-bay-153.ftp.azurewebsites.windows.net"
+                USERNAME = "novaCorpWeb\$novaCorpWeb"
+                PASSWORD = "B4sdhvCuwvH9XTCohRJhuQPf01n4xf0phPz2N1L0XlKY6sNWb0DkxxlTbpnu"
 
-            ftp_server.cwd(f'/site/wwwroot/{st.session_state["login_id"]}')
-            filename = "faq_data.csv"
-            with open(filename, "w",newline='') as csvfile:
-                csvwriter = csv.writer(csvfile) 
-                csvwriter.writerow(fields) 
-                csvwriter.writerows(save)
-            with open(filename, "rb") as csvfile:
-                ftp_server.storbinary(f"STOR {filename}", csvfile)
-        else:
-            pass
+                # Connect FTP Server
+                ftp_server = ftplib.FTP(HOSTNAME, USERNAME, PASSWORD)
+                
+                # force UTF-8 encoding
+                ftp_server.encoding = "utf-8"
+
+                ftp_server.cwd(f'/site/wwwroot/{st.session_state["login_id"]}')
+                filename = "faq_data.csv"
+                with open(filename, "w",newline='') as csvfile:
+                    csvwriter = csv.writer(csvfile) 
+                    csvwriter.writerow(fields) 
+                    csvwriter.writerows(save)
+                with open(filename, "rb") as csvfile:
+                    ftp_server.storbinary(f"STOR {filename}", csvfile)
+            else:
+                pass
+        
+        # Sidebar functionality
 
         with st.sidebar:
 
@@ -269,8 +314,39 @@ if not _RELEASE:
             page_columns = st.columns(2)
             a_per_page = page_columns[1].slider('Answers per Page',1, 30,10, key='a_per_page')
             last_page = ceil(st.session_state.num_questions/a_per_page)
-            page = page_columns[0].selectbox('page',range(1,last_page+1))
+            
 
+            # Train Button
+            if st.button("Train", key = "Train"):
+                try:
+                    # st.write('Training has begun')
+                    URL = f'{os.environ["TRAIN"]}/search/{st.session_state.login_id}'
+                    r = requests.get(url = URL)
+                    data = r.json()
+                    st.write(data)
+                except:
+                    st.write("A problem has occured while training, Please try logging in again")
+            else:
+                pass
+
+            # Search questions
+            allques = []
+            for i in st.session_state.question:
+                for j in i:
+                    allques.append(j)
+            st.selectbox('Search', allques, key='search')
+            if 'sea' not in st.session_state:
+                st.session_state.sea = ''
+            if st.session_state.search != st.session_state.sea:
+                st.session_state.sea = st.session_state.search
+                sea = st.session_state.sea
+                for k in range(len(st.session_state.question)):
+                    if sea in st.session_state.question[k]:
+                        st.write(f'The Question is on page {ceil((k+1)/a_per_page)} QnA no {k+1} and question number {st.session_state.question[k].index(sea)+1}')
+                        # url = f'http://localhost:8501/#{k+1}'
+                        # st.markdown("check out this [link](%s)" % url)
+                        st.session_state.lol = ceil((k+1)/a_per_page)
+            page = page_columns[0].selectbox('Page',range(1,last_page+1), key='lol')
             # Compare current page selection to first and last page number
 
             if page == 1:
@@ -304,19 +380,19 @@ if not _RELEASE:
                     st.session_state.qindex.append(0)
 
                 con = st.container()
+                con.subheader(f'{i+1}.')
 
                 #Add Question to QnA
-
                 if con.button("Add Questions", key = f"{i}.Add Questions"):
                     st.session_state.qindex[i] += 1
                 else:
                     pass
                 
                 # Creating columns for All Questions and an Answer of current QnA
-
-                col1, col2 = con.columns([5, 5])
+                
+                col1, col2, col3= con.columns([3, 0.6, 3])
                 col1.text("Questions")
-                col2.text("Answer")
+                col3.text("Answer")
 
                 # Rendering all questions of current QnA
 
@@ -331,42 +407,61 @@ if not _RELEASE:
                     )
 
                     # Delete particular question in QnA
-
-                    col1.button("❌", key = f"{i}.{j}.❌", on_click=delete_question, args=[i,j])
+                    col2.button("🗑", help="delete", key = f"{i}.{j}.❌", on_click=delete_question, args=[i,j])
                 
                 # Rendering the Answer
 
-                with col2:
+                with col3:
                     if st.session_state.answer[i] == '':
+
+                        # Create card Button
                         if st.button("Create card", key = f"{i+1}.Create card"):
                             st.session_state.refresh=1
                             st.session_state.answer[i] = '''{"type": "AdaptiveCard","$schema": "http://adaptivecards.io/schemas/adaptive-card.json","version": "1.6","body": []}'''
                         else:
                             pass
+
+                        # Create carousel Button
                         if st.button(f"{i+1}.Create carousel"):
                             st.session_state.refresh=1
                             st.session_state.answer[i] = '''{"type": "AdaptiveCard","$schema": "http://adaptivecards.io/schemas/adaptive-card.json","version": "1.6","body": []}/??/{"type": "AdaptiveCard","$schema": "http://adaptivecards.io/schemas/adaptive-card.json","version": "1.6","body": []}'''
                         else:
                             pass
+
+                    # Check if Input is Adaptive card or normal text or Carousel
+                    
                     if st.session_state.answer[i].find('/??/') == -1:
                         try:
+
+                            # Adaptive card
+
                             ans=json.loads(st.session_state.answer[i])
                             num_clicks = my_component(botProperties,ans, key='Foo '+str(i+1)+' Answer')
                             k = "editcard"
                             adata = json.dumps(ans)
+
+                            # Edit card
                             if st.button("Edit", key = f"{i+1}.Edit"):
                                 st_javascript(f"sessionStorage.setItem('{k}', JSON.stringify({adata}));")
                                 st.session_state["editcard"] = i
                             else:
                                 pass
+
+                            # Delete card
                             if st.button("Delete card", key = f"{i+1}.Delete card"):
                                 st.session_state.refresh=1
                                 st.session_state.answer[i] = ''
                             else:
                                 pass
-                        except:   
+                        except:
+
+                            # Normal Text
+
                             st.session_state.answer[i] = st.text_area(f"ans_{i}", label_visibility="collapsed", value=st.session_state.answer[i])
                     else:
+
+                        # Carousel
+                        # String slicing to get Carousel seperator indexes
                         st.session_state.carousel = [0]
                         for j in range(len(st.session_state.answer[i])-4):
                             if st.session_state.answer[i][j:j+4] == '/??/':
@@ -378,6 +473,8 @@ if not _RELEASE:
                                 st.session_state[f"card_{i}"].append('')
                         
                         try:
+
+                            # Render Cards and Buttons
                             for j in range(len(st.session_state[f"card_{i}"])):
                                 ans=json.loads(st.session_state[f"card_{i}"][j])
                                 num_clicks = my_component(botProperties,ans, key='Foo '+str(i+1)+str(j+1)+' Answer')
@@ -385,13 +482,19 @@ if not _RELEASE:
                                 st.button("Delete", key = f"{i+1}.{j+1}.Delete card", on_click=delete_card, args=[i,j])
                                 
                         except:
+
+                            # Initialize Cards
                             for j in range(len(st.session_state.carousel)-1):
                                 st.session_state[f"card_{i}"][j] = st.session_state.answer[i][st.session_state.carousel[j] if j == 0 else st.session_state.carousel[j]+4 :st.session_state.carousel[j+1]]
+                        
+                        # Add card
                         st.button("Add Card", key = f"{i+1}.{j+1}.Add card", on_click=add_card, args=[i])
 
+                # Delete QnA
                 con.button("Delete QnA", key = f"{i}.Delete QnA", on_click=delete_qna, args=[i])
                 con.text("-------------------------------------------------------------------------------------------------------------------------")
-            
+        
+        # Refresh page   
         if st.session_state.refresh==1:
             st.session_state.refresh = 0
             time.sleep(3)
