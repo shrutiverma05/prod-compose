@@ -277,9 +277,9 @@ if not _RELEASE:
                         row.append(str(i+1))
                         save.append(row)
                 
-                HOSTNAME = "waws-prod-bay-153.ftp.azurewebsites.windows.net"
-                USERNAME = "novaCorpWeb\$novaCorpWeb"
-                PASSWORD = "B4sdhvCuwvH9XTCohRJhuQPf01n4xf0phPz2N1L0XlKY6sNWb0DkxxlTbpnu"
+                HOSTNAME = "waws-prod-db3-177.ftp.azurewebsites.windows.net"
+                USERNAME = "novaeu\$novaeu"
+                PASSWORD = "r8d0hfMcM1ssZ0K4jspHbQ1zwdqjH29PvMnMzFugnpyrfZ1kZfG6Yc9kJbi7"
 
                 # Connect FTP Server
                 ftp_server = ftplib.FTP(HOSTNAME, USERNAME, PASSWORD)
