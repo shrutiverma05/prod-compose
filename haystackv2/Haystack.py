@@ -37,7 +37,7 @@ def train(data_file,index_name,retriever,document_store):
 app = FastAPI()
 
 
-@app.get("/search/{index_name}", status_code=202)
+@app.get("/train/{index_name}", status_code=202)
 async def index(index_name, background_tasks: BackgroundTasks):
     document_store = (ElasticsearchDocumentStore(
         host=host,

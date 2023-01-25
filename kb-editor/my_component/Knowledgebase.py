@@ -320,7 +320,7 @@ if not _RELEASE:
             if st.button("Train", key = "Train"):
                 try:
                     # st.write('Training has begun')
-                    URL = f'{os.environ["TRAIN"]}/search/{st.session_state.login_id}'
+                    URL = f'{os.environ["TRAIN"]}/train/{st.session_state.login_id}'
                     r = requests.get(url = URL)
                     data = r.json()
                     st.write(data)
