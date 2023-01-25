@@ -28,7 +28,7 @@ services:
    elasticsearch:
      restart: on-failure
      container_name: "elasticsearch-main"
-     image: "deepset/elasticsearch-countries-and-capitals"
+     image: "docker.elastic.co/elasticsearch/elasticsearch:7.9.2"
      ports:
        - 9200:9200
      networks:
@@ -44,6 +44,8 @@ services:
         timeout: 1s
         retries: 10
         start_period: 45s 
+     volumes: 
+      - esdata:/usr/share/elasticsearch/data
 
    haystack:
      restart: on-failure
@@ -116,3 +118,5 @@ networks:
   test-network:
 volumes:
   https-portal-data:
+  esdata:
+    driver: local
