@@ -5,6 +5,7 @@
   <script src="https://unpkg.com/adaptivecards-templating@latest/dist/adaptivecards-templating.min.js"></script>
   <script src="https://unpkg.com/markdown-it@8.4.0/dist/markdown-it.min.js"></script>
   <script src="https://unpkg.com/adaptivecards-designer@latest/dist/adaptivecards-designer-standalone.min.js"></script>
+  <script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.5/jquery.min.js"></script>
   <script type="text/javascript">
     window.onload = function () {
       const card = sessionStorage.getItem("editcard")
@@ -48,10 +49,15 @@
           "Save Changes",
           null,
           (sender) => {
-            sessionStorage.setItem(
-              "changedcard",
-              JSON.stringify(designer.getCard())
-            );
+            // sessionStorage.setItem(
+            //   "changedcard",
+            //   JSON.stringify(designer.getCard())
+            // );
+            // $.ajax({ url:"http://127.0.0.1:5000/", type:"GET"});
+            document.cookie = `changedCard=${JSON.stringify(designer.getCard())}`
+            const value = "; " + document.cookie; const parts = value.split("; " + "username" + "="); if (parts.length == 2) return console.log(parts.pop().split(";").shift());
+            // console.log(designer.getCard())
+            // $.ajax({ url:"http://127.0.0.1:5000/test", type:"POST", contentType: "application/json", data: JSON.stringify(designer.getCard())});
           }
         );
         myButton.separator = true;

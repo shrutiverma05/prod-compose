@@ -30,6 +30,7 @@ if not _RELEASE:
         # Pass `url` here to tell Streamlit that the component will be served
         # by the local dev server that you run via `npm run start`.
         # (This is useful while your component is in development.)
+        # url="http://localhost:8051/"
         url=os.environ['nodeURL']
     )
 else:
@@ -46,6 +47,7 @@ else:
 # `declare_component` and call it done. The wrapper allows us to customize
 # our component's API: we can pre-process its input args, post-process its
 # output value, and add a docstring for users.
+
 def my_component(botProp,name, key=None):
     """Create a new instance of "my_component".
 
@@ -86,6 +88,7 @@ def my_component(botProp,name, key=None):
 if not _RELEASE:
     import streamlit as st
     from streamlit_javascript import st_javascript
+    from streamlit_extras.switch_page_button import switch_page
     import csv
     import time
     import ftplib
@@ -94,6 +97,47 @@ if not _RELEASE:
     import json
     from math import ceil
     import base64
+    import sys
+    import extra_streamlit_components as stx
+    from pathlib import Path
+    from streamlit.source_util import (
+        page_icon_and_name, 
+        calc_md5, 
+        get_pages,
+        _on_pages_changed
+    )
+
+    # Adding and deleting pages from sidebar
+
+    def delete_page(main_script_path_str, page_name):
+        current_pages = get_pages(main_script_path_str)
+        for key, value in current_pages.items():
+            if value['page_name'] == page_name:
+                del current_pages[key]
+                break
+            else:
+                pass
+        _on_pages_changed.send()
+
+    def add_page(main_script_path_str, page_name):
+        pages = get_pages(main_script_path_str)
+        main_script_path = Path(main_script_path_str)
+        pages_dir = main_script_path.parent / "pages"
+        # st.write(list(pages_dir.glob("*.py"))+list(main_script_path.parent.glob("*.py")))
+        script_path = [f for f in list(pages_dir.glob("*.py"))+list(main_script_path.parent.glob("*.py")) if f.name.find(page_name) != -1][0]
+        script_path_str = str(script_path.resolve())
+        pi, pn = page_icon_and_name(script_path)
+        psh = calc_md5(script_path_str)
+        pages[psh] = {
+            "page_script_hash": psh,
+            "page_name": pn,
+            "icon": pi,
+            "script_path": script_path_str,
+        }
+        _on_pages_changed.send()
+    
+    delete_page("Knowledgebase", "Login")
+    delete_page("Knowledgebase", "Create_Card")
 
     st.set_page_config(layout="wide",page_title='Novacept Connect',page_icon = 'NovaceptMark.png',initial_sidebar_state = 'auto')
 
@@ -135,7 +179,12 @@ if not _RELEASE:
     if "authentication_status" not in st.session_state:
         st.session_state["authentication_status"] = None
     if st.session_state["authentication_status"]:
-        st.session_state.login_id = st.session_state.login_id
+        try:
+            if "login_id" not in st.session_state:
+                st.session_state.login_id = st.experimental_get_query_params()["username"][0]
+        except:
+            st.header("")
+            st.header("Please press rerun")
         if "page" in st.session_state:
             st.session_state.page = st.session_state.page
 
@@ -167,6 +216,9 @@ if not _RELEASE:
 
         if "refresh" not in st.session_state:
             st.session_state.refresh = 0
+        
+        if "change" not in st.session_state:
+            st.session_state.change = False
 
         # for k, v in st.session_state.items():
         #     st.session_state[k] = v
@@ -188,6 +240,7 @@ if not _RELEASE:
             adata = json.dumps(ans)
             st_javascript(f"sessionStorage.setItem('{k}', JSON.stringify({adata}));")
             st.session_state["editcard"] = [i,j]
+            st.session_state.change = True
         
         def delete_card(i,j):
             if j != len(st.session_state.carousel) - 2:
@@ -201,14 +254,17 @@ if not _RELEASE:
             st.session_state.answer[i] = st.session_state.answer[i] +'''/??/{"type": "AdaptiveCard","$schema": "http://adaptivecards.io/schemas/adaptive-card.json","version": "1.6","body": []}'''
             st.session_state[f"card_{i}"].append('''{"type": "AdaptiveCard","$schema": "http://adaptivecards.io/schemas/adaptive-card.json","version": "1.6","body": []}''')
 
-        # Updating the edit made on the Adaptivecard in Create card page
+        # Updating the edit made on the Adaptivecard in Create card page using cookies
 
-        st.session_state["changedcard"] = st_javascript(f"JSON.parse(sessionStorage.getItem('changedcard'));")       
-        if st.session_state["changedcard"] == 0:
-            pass
-        else:
-            st_javascript(f"(sessionStorage.removeItem('changedcard'));")
-            st_javascript(f"(sessionStorage.removeItem('editcard'));")
+        @st.cache(allow_output_mutation=True)
+        def get_manager():
+            return stx.CookieManager()
+        cookie_manager = get_manager()
+        cookies = cookie_manager.get_all()
+        value = cookie_manager.get(cookie='changedCard')
+        if value != None:
+            st.session_state["changedcard"] = value
+            cookie_manager.delete("changedCard")
             testv = json.dumps(st.session_state["changedcard"])
             if type(st.session_state["editcard"]) == list:
                 ival = st.session_state["editcard"][0]
@@ -227,16 +283,22 @@ if not _RELEASE:
         # Load the csv file from server to the session state
 
         if head1.button('Load'):
-            head1.write('File Loaded')
+            head1.text('File Loaded')
             indata = []
             index = set()
             data_file = 'faq_data.csv'
             url = f'{os.environ["FTPurl"]}{st.session_state["login_id"]}/{data_file}'
             urllib.request.urlretrieve(url, data_file)
-            with open(data_file, mode ='r',encoding='cp1252') as file:
-                csvFile = csv.reader(file)
-                for lines in csvFile:
-                    indata.append(lines)
+            try:
+                with open(data_file, mode ='r',encoding='cp1252') as file:
+                    csvFile = csv.reader(file)
+                    for lines in csvFile:
+                        indata.append(lines)
+            except:
+                with open(data_file, mode ='r') as file:
+                    csvFile = csv.reader(file)
+                    for lines in csvFile:
+                        indata.append(lines)
             indata.pop(0)
             question = []
             ans = []
@@ -266,7 +328,7 @@ if not _RELEASE:
 
         if st.session_state['num_questions'] > 0:
             if head2.button('Save'):
-                head2.write('File Saved')
+                head2.text('File Saved')
                 save = []
                 fields = ['question','answer','index']
                 for i in range(st.session_state['num_questions']):
@@ -288,6 +350,8 @@ if not _RELEASE:
                 ftp_server.encoding = "utf-8"
 
                 ftp_server.cwd(f'/site/wwwroot/{st.session_state["login_id"]}')
+                ftp_server.delete("faq_data_old.csv")
+                ftp_server.rename("faq_data.csv","faq_data_old.csv")
                 filename = "faq_data.csv"
                 with open(filename, "w",newline='') as csvfile:
                     csvwriter = csv.writer(csvfile) 
@@ -347,8 +411,8 @@ if not _RELEASE:
                         # st.markdown("check out this [link](%s)" % url)
                         st.session_state.lol = ceil((k+1)/a_per_page)
             page = page_columns[0].selectbox('Page',range(1,last_page+1), key='lol')
-            # Compare current page selection to first and last page number
 
+            # Compare current page selection to first and last page number
             if page == 1:
                 first = True
             else:
@@ -422,7 +486,7 @@ if not _RELEASE:
                             pass
 
                         # Create carousel Button
-                        if st.button(f"{i+1}.Create carousel"):
+                        if st.button("Create carousel", key = f"{i+1}.Create carousel"):
                             st.session_state.refresh=1
                             st.session_state.answer[i] = '''{"type": "AdaptiveCard","$schema": "http://adaptivecards.io/schemas/adaptive-card.json","version": "1.6","body": []}/??/{"type": "AdaptiveCard","$schema": "http://adaptivecards.io/schemas/adaptive-card.json","version": "1.6","body": []}'''
                         else:
@@ -444,6 +508,7 @@ if not _RELEASE:
                             if st.button("Edit", key = f"{i+1}.Edit"):
                                 st_javascript(f"sessionStorage.setItem('{k}', JSON.stringify({adata}));")
                                 st.session_state["editcard"] = i
+                                st.session_state.change = True
                             else:
                                 pass
 
@@ -494,13 +559,27 @@ if not _RELEASE:
                 con.button("Delete QnA", key = f"{i}.Delete QnA", on_click=delete_qna, args=[i])
                 con.text("-------------------------------------------------------------------------------------------------------------------------")
         
-        # Refresh page   
-        if st.session_state.refresh==1:
-            st.session_state.refresh = 0
+        # Refresh page
+        with st.spinner():
+            if st.session_state.refresh==1:
+                st.session_state.refresh = 0
+                time.sleep(3)
+                st.experimental_rerun()
+
+        # Change page
+        if st.session_state.change == True:
+            st.session_state.change = False
             time.sleep(3)
-            st.experimental_rerun()
+            add_page("Knowledgebase", "Create Card")
+            switch_page("Create Card")
+
+    # If user is not Logged in
 
     elif st.session_state["authentication_status"] == False:
+        add_page("Knowledgebase", "Login")
+        switch_page("Login")
         st.error('Username/password is incorrect')
     elif st.session_state["authentication_status"] == None:
+        add_page("Knowledgebase", "Login")
+        switch_page("Login")
         st.warning('Please enter your username and password')

@@ -244,6 +244,16 @@ h1,#knowledge-base-for-gts{
     color: var(--textColor);
 }
 
+input,textarea{ color: var(--textColor) !important;
+    caret-color: var(--textColor) !important;
+}
+[data-testid="stText"]{color: var(--textColor) !important;}
+h2{color: var(--textColor) !important;}
+label{color: var(--textColor) !important;}
+a>span{color: var(--textColor) !important;}
+.css-klqnuk{color: var(--buttonTextColor) !important;}
+h3,#my-knowledge-header-subheade{color: var(--textColor) !important;}
+
 @media (max-width: 640px){
     [data-testid|="stHorizontalBlock"]{
         flex-wrap: nowrap !important;

@@ -5,6 +5,9 @@ from haystack.nodes import EmbeddingRetriever
 from fastapi import BackgroundTasks, FastAPI
 import pandas as pd
 import urllib.request
+from fastapi.middleware.cors import CORSMiddleware
+import requests
+import json
 
 data_file = 'faq_data.csv'
 host = os.environ.get("ELASTICSEARCH_HOST", "localhost")
@@ -13,10 +16,23 @@ hostedserverUrl = "https://novaeu.azurewebsites.net/"
 def download(data_file,index_name):
     url = hostedserverUrl+index_name+'/'+data_file
     urllib.request.urlretrieve(url, data_file)
-    
+
 def train(data_file,index_name,retriever,document_store):
+    # url = "http://localhost:9200/"+index_name
+    # payload={}
+    # headers = {}
+    # response = requests.request("GET", url, headers=headers, data=payload)
+    # if "error" not in json.loads(response.text):
+    #      # Delete Index        
+    #     url = "http://localhost:9200/"+index_name
+    #     payload={}
+    #     headers = {}
+    #     response = requests.request("DELETE", url, headers=headers, data=payload)
     download(data_file,index_name)
-    df = pd.read_csv(data_file)
+    try:
+        df = pd.read_csv(data_file, encoding='cp1252')
+    except:
+        df = pd.read_csv(data_file)
     df.fillna(value="", inplace=True)
     df["question"] = df["question"].apply(lambda x: x.strip())
 
@@ -35,7 +51,14 @@ def train(data_file,index_name,retriever,document_store):
     document_store.write_documents(docs_to_index)
 
 app = FastAPI()
-
+origins = ["*"]
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+    )
 
 @app.get("/train/{index_name}", status_code=202)
 async def index(index_name, background_tasks: BackgroundTasks):
