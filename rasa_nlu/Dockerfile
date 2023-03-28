@@ -1,5 +1,5 @@
  FROM python:3.7-slim
- RUN python -m pip install rasa
+ RUN python -m pip install rasa==3.1
 
  WORKDIR /app
  COPY . .
