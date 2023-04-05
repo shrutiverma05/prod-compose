@@ -10,7 +10,8 @@ services:
       - haystack
       - api
       - nlu
-      - streamlit
+      # - streamlit
+      - server
       - node
     restart: on-failure
     # environment:
@@ -92,26 +93,52 @@ services:
     networks:
      - test-network
 
-   streamlit:
-    restart: on-failure
-    container_name: streamlit-data
-    build: ./kb-editor/my_component
-    ports:
-     - "8501:8501"
-    networks:
-     - test-network
+  #  streamlit:
+  #   restart: on-failure
+  #   container_name: streamlit-data
+  #   build: ./kb-editor/my_component
+  #   ports:
+  #    - "8501:8501"
+  #   networks:
+  #    - test-network
 
+  #  node:
+  #   restart: on-failure
+  #   container_name: node-data
+  #   build: ./kb-editor/my_component/frontend
+  #   ports:
+  #    - "8051:8051"
+  #   networks:
+  #    - test-network
+  #   command: ["npm", "start"]
+  #   # volumes:
+  #   #   - /app/frontend
+  #   tty: true
+
+   server:
+    restart: on-failure
+    container_name: backend-data
+    build: ./qna-editor/backend
+    ports:
+      - "8085:8085"
+    networks:
+      - test-network
+    command: ["node", "index.js"]
+    volumes:
+      - data1:/app/qna-editor/backend
+    tty: true
+     
    node:
     restart: on-failure
-    container_name: node-data
-    build: ./kb-editor/my_component/frontend
+    container_name: frontend-data
+    build: ./qna-editor/frontend
     ports:
-     - "8051:8051"
+     - "8009:8009"
     networks:
      - test-network
     command: ["npm", "start"]
-    # volumes:
-    #   - /app/frontend
+    volumes:
+       - data2:/app/qna-editor/frontend
     tty: true
      
 networks:
@@ -120,3 +147,5 @@ volumes:
   https-portal-data:
   esdata:
     driver: local
+  data1: 
+  data2:
